@@ -22,9 +22,12 @@ class RoomMixin(object):
             url = V2_TOKEN_URL % {"server": settings.HIPCHAT_SERVER,
                                   "token": settings.V2_TOKEN}
             resp = requests.get(url)
+
+            rooms = resp.json()
             if resp.status_code == requests.codes.unauthorized:
                 raise Exception("V2_TOKEN authentication failed with HipChat")
-            rooms = resp.json()
+            elif resp.status_code == requests.codes.forbidden:
+                raise Exception("Forbidden: {}".format(rooms['error']['message']))
 
             for room in rooms["items"]:
                 url = room["links"]["self"] + "/?auth_token=%s;expand=xmpp_jid" % (settings.V2_TOKEN,)
